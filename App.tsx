@@ -3,11 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   Zap,
   ExternalLink,
-  LayoutGrid
+  LayoutGrid,
+  HelpCircle,
+  X,
+  Database,
+  Smartphone,
+  ShieldAlert
 } from 'lucide-react';
 import { LinksList } from './components/LinksList';
 import { CreateLink } from './components/CreateLink';
-import { getLinks, saveLink, deleteLink, recordClick, seedDataIfEmpty } from './services/storageService';
+import { getLinks, saveLink, deleteLink, recordClick, clearAllLinks } from './services/storageService';
 import { ShortLink } from './types';
 
 type AppView = 'create' | 'list';
@@ -16,6 +21,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<AppView>('create');
   const [links, setLinks] = useState<ShortLink[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   
   // Redirection State
   const [redirectState, setRedirectState] = useState<{active: boolean; url?: string}>({ active: false });
@@ -44,20 +50,24 @@ const App: React.FC = () => {
     }
 
     // 2. Normal App Load
-    seedDataIfEmpty();
     setLinks(getLinks());
   }, [refreshTrigger]);
 
   const handleCreateLink = (newLink: ShortLink) => {
-    // Note: saveLink handles updates automatically now
     saveLink(newLink);
     setRefreshTrigger(prev => prev + 1);
-    // We stay in create view now because CreateLink handles its own success state
   };
 
   const handleDeleteLink = (id: string) => {
     if (window.confirm('Are you sure you want to delete this link?')) {
       deleteLink(id);
+      setRefreshTrigger(prev => prev + 1);
+    }
+  };
+  
+  const handleClearAll = () => {
+    if (window.confirm('Are you sure you want to clear ALL links? This cannot be undone.')) {
+      clearAllLinks();
       setRefreshTrigger(prev => prev + 1);
     }
   };
@@ -110,24 +120,96 @@ const App: React.FC = () => {
             </span>
           </div>
 
-          <button 
-             onClick={() => setView(view === 'create' ? 'list' : 'create')}
-             className="flex items-center px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm text-sm font-medium text-gray-600 hover:text-indigo-600 hover:border-indigo-200 transition-all"
-           >
-             {view === 'create' ? (
-               <>
-                 <LayoutGrid className="w-4 h-4 mr-2" />
-                 My Links
-               </>
-             ) : (
-               <>
-                 <Zap className="w-4 h-4 mr-2" />
-                 Create New
-               </>
-             )}
-           </button>
+          <div className="flex items-center space-x-3">
+             <button 
+               onClick={() => setShowInfoModal(true)}
+               className="p-2.5 text-gray-500 hover:bg-white hover:text-indigo-600 rounded-full transition-colors"
+               title="How it works"
+             >
+               <HelpCircle className="w-5 h-5" />
+             </button>
+
+             <button 
+               onClick={() => setView(view === 'create' ? 'list' : 'create')}
+               className="flex items-center px-4 py-2 bg-white rounded-full border border-gray-200 shadow-sm text-sm font-medium text-gray-600 hover:text-indigo-600 hover:border-indigo-200 transition-all"
+             >
+               {view === 'create' ? (
+                 <>
+                   <LayoutGrid className="w-4 h-4 mr-2" />
+                   My Links
+                 </>
+               ) : (
+                 <>
+                   <Zap className="w-4 h-4 mr-2" />
+                   Create New
+                 </>
+               )}
+             </button>
+          </div>
         </div>
       </header>
+
+      {/* Info Modal */}
+      {showInfoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <ShieldAlert className="w-5 h-5 text-indigo-600 mr-2" />
+                How this App Works
+              </h3>
+              <button onClick={() => setShowInfoModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-blue-50 rounded-xl text-blue-600">
+                  <Database className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Local Storage Only</h4>
+                  <p className="text-sm text-gray-500 mt-1">
+                    This app does not use a backend server. All your links are stored directly in your browser's <strong>Local Storage</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-amber-50 rounded-xl text-amber-600">
+                  <Smartphone className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Device Specific</h4>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Links created here <strong>will ONLY work on this device</strong>. If you send a link to a friend, it will not work for them because their browser doesn't have your local data.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="p-3 bg-red-50 rounded-xl text-red-600">
+                  <Zap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900">Clearing Data</h4>
+                  <p className="text-sm text-gray-500 mt-1">
+                    If you clear your browser cache or history, all your created links and statistics will be permanently deleted.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="p-6 bg-gray-50 text-center">
+              <button 
+                onClick={() => setShowInfoModal(false)}
+                className="w-full py-3 bg-gray-900 hover:bg-black text-white rounded-xl font-bold transition-colors"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 pt-32 pb-12">
@@ -135,7 +217,7 @@ const App: React.FC = () => {
           <div className="animate-fade-in">
             <CreateLink onSave={handleCreateLink} onCancel={() => {}} />
             
-            {/* Recent Links Preview (Optional) */}
+            {/* Recent Links Preview */}
             {links.length > 0 && (
                <div className="mt-16 text-center">
                  <p className="text-gray-400 text-sm mb-2">Previously created</p>
@@ -162,7 +244,8 @@ const App: React.FC = () => {
              <LinksList 
                links={links} 
                onDelete={handleDeleteLink} 
-               onSimulateClick={handleSimulateClick} 
+               onSimulateClick={handleSimulateClick}
+               onClearAll={handleClearAll}
              />
           </div>
         )}

@@ -1,15 +1,16 @@
 
 import React, { useState } from 'react';
 import { ShortLink } from '../types';
-import { Trash2, Copy, BarChart2, Play, ArrowUpRight } from 'lucide-react';
+import { Trash2, Copy, BarChart2, Play, ArrowUpRight, AlertTriangle, Database } from 'lucide-react';
 
 interface LinksListProps {
   links: ShortLink[];
   onDelete: (id: string) => void;
   onSimulateClick: (id: string) => void;
+  onClearAll: () => void;
 }
 
-export const LinksList: React.FC<LinksListProps> = ({ links, onDelete, onSimulateClick }) => {
+export const LinksList: React.FC<LinksListProps> = ({ links, onDelete, onSimulateClick, onClearAll }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const origin = window.location.origin;
 
@@ -38,95 +39,127 @@ export const LinksList: React.FC<LinksListProps> = ({ links, onDelete, onSimulat
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50/50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Short Link</th>
-              <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider hidden md:table-cell">Destination</th>
-              <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Clicks</th>
-              <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {links.map((link) => {
-              const fullShortLink = `${origin}/#/${link.alias}`;
-              
-              return (
-                <tr key={link.id} className="hover:bg-indigo-50/30 transition-colors group">
-                  <td className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <div className="flex items-center mb-1.5">
-                        <a 
-                          href={`/#/${link.alias}`} 
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline text-base break-all flex items-center"
+    <div className="space-y-4">
+      {/* Local Storage Warning Banner */}
+      <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 flex items-start space-x-3">
+        <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <h4 className="text-sm font-bold text-amber-800">Local Storage Mode</h4>
+          <p className="text-xs text-amber-700 mt-1">
+            These links are stored in your browser's local storage. They will only work on this specific device and browser. 
+            If you clear your cache, they will be lost.
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+           <div className="flex items-center text-xs font-medium text-amber-800 bg-white/50 px-2 py-1 rounded-lg">
+             <Database className="w-3 h-3 mr-1" />
+             Local Only
+           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        {/* Header with Clear Button */}
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            {links.length} Active Link{links.length !== 1 && 's'}
+          </span>
+          <button 
+            onClick={onClearAll}
+            className="text-xs text-red-500 hover:text-red-700 hover:underline font-medium flex items-center"
+          >
+            <Trash2 className="w-3 h-3 mr-1" />
+            Clear History
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50/50 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Short Link</th>
+                <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider hidden md:table-cell">Destination</th>
+                <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Clicks</th>
+                <th className="px-6 py-5 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {links.map((link) => {
+                return (
+                  <tr key={link.id} className="hover:bg-indigo-50/30 transition-colors group">
+                    <td className="px-6 py-5">
+                      <div className="flex flex-col">
+                        <div className="flex items-center mb-1.5">
+                          <a 
+                            href={`/#/${link.alias}`} 
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-bold text-indigo-600 hover:text-indigo-700 hover:underline text-base break-all flex items-center"
+                          >
+                            {link.alias}
+                            <ArrowUpRight className="w-3 h-3 ml-1 opacity-50" />
+                          </a>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {link.tags && link.tags.map(tag => (
+                            <span key={tag} className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 rounded-md uppercase tracking-wider">{tag}</span>
+                          ))}
+                        </div>
+                        <div className="md:hidden text-xs text-gray-400 mt-2 truncate max-w-[150px]">
+                          {link.originalUrl}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 max-w-xs hidden md:table-cell">
+                      <div className="flex items-center group-hover:text-gray-900 text-gray-500 transition-colors">
+                        <span className="text-sm truncate w-full" title={link.originalUrl}>
+                          {link.originalUrl}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-1.5">
+                        {new Date(link.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100">
+                        <BarChart2 className="w-3.5 h-3.5 text-gray-400 mr-2" />
+                        <span className="font-bold text-gray-900">{link.totalClicks}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex items-center justify-end space-x-1">
+                        <button
+                          onClick={() => handleVisit(link)}
+                          className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                          title="Test Visit"
                         >
-                          {link.alias}
-                          <ArrowUpRight className="w-3 h-3 ml-1 opacity-50" />
-                        </a>
+                          <Play className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleCopy(link.alias, link.id)}
+                          className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
+                          title="Copy Link"
+                        >
+                          {copiedId === link.id ? (
+                             <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">Copied!</span>
+                          ) : null}
+                          <Copy className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(link.id)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {link.tags && link.tags.map(tag => (
-                          <span key={tag} className="px-2 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 rounded-md uppercase tracking-wider">{tag}</span>
-                        ))}
-                      </div>
-                      <div className="md:hidden text-xs text-gray-400 mt-2 truncate max-w-[150px]">
-                        {link.originalUrl}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 max-w-xs hidden md:table-cell">
-                    <div className="flex items-center group-hover:text-gray-900 text-gray-500 transition-colors">
-                      <span className="text-sm truncate w-full" title={link.originalUrl}>
-                        {link.originalUrl}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-gray-400 mt-1.5">
-                      {new Date(link.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </div>
-                  </td>
-                  <td className="px-6 py-5">
-                    <div className="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-50 border border-gray-100">
-                      <BarChart2 className="w-3.5 h-3.5 text-gray-400 mr-2" />
-                      <span className="font-bold text-gray-900">{link.totalClicks}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-5 text-right">
-                    <div className="flex items-center justify-end space-x-1">
-                      <button
-                        onClick={() => handleVisit(link)}
-                        className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                        title="Test Visit"
-                      >
-                        <Play className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleCopy(link.alias, link.id)}
-                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors relative"
-                        title="Copy Link"
-                      >
-                        {copiedId === link.id ? (
-                           <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded shadow-lg whitespace-nowrap">Copied!</span>
-                        ) : null}
-                        <Copy className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(link.id)}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

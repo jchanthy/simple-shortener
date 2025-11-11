@@ -36,6 +36,10 @@ export const deleteLink = (id: string): void => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedLinks));
 };
 
+export const clearAllLinks = (): void => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 export const recordClick = (id: string): ShortLink | null => {
   const links = getLinks();
   const today = new Date().toISOString().split('T')[0];
@@ -67,39 +71,3 @@ export const checkAliasExists = (alias: string): boolean => {
   const links = getLinks();
   return links.some(l => l.alias === alias);
 }
-
-// Seed some initial data if empty for demo purposes
-export const seedDataIfEmpty = () => {
-  const links = getLinks();
-  if (links.length === 0) {
-    const now = Date.now();
-    const demoLinks: ShortLink[] = [
-      {
-        id: 'demo-1',
-        originalUrl: 'https://www.google.com',
-        alias: 'google-search',
-        createdAt: now - 10000000,
-        totalClicks: 124,
-        clickHistory: [
-          { date: '2023-10-20', count: 10 },
-          { date: '2023-10-21', count: 45 },
-          { date: '2023-10-22', count: 69 },
-        ],
-        tags: ['search', 'engine']
-      },
-      {
-        id: 'demo-2',
-        originalUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-        alias: 'mystery-video',
-        createdAt: now - 5000000,
-        totalClicks: 892,
-        clickHistory: [
-          { date: '2023-10-21', count: 200 },
-          { date: '2023-10-22', count: 692 },
-        ],
-        tags: ['video', 'music']
-      }
-    ];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(demoLinks));
-  }
-};
