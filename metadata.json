@@ -1,0 +1,5 @@
+{
+  "name": "LinkSmart - AI URL Shortener",
+  "description": "A modern URL shortener dashboard featuring AI-powered alias generation, click tracking, and analytics visualization.",
+  "requestFramePermissions": []
+}
