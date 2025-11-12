@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, Copy, QrCode, RotateCcw, Save, Edit2, Globe, Link2 } from 'lucide-react';
 import { ShortLink } from '../types';
@@ -106,8 +107,6 @@ export const CreateLink: React.FC<CreateLinkProps> = ({ onSave }) => {
     setIsEditing(false);
     setShowQr(false);
   };
-
-  const fullShareUrl = currentLink ? `${origin}/#/${currentLink.alias}` : '';
 
   // --- RENDER: INPUT MODE ---
   if (mode === 'input') {
@@ -239,18 +238,18 @@ export const CreateLink: React.FC<CreateLinkProps> = ({ onSave }) => {
       {showQr && (
         <div className="mt-6 p-6 bg-white border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center animate-fade-in">
           <img 
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullShareUrl)}&bgcolor=ffffff`} 
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentLink?.originalUrl || '')}&bgcolor=ffffff`} 
             alt="QR Code" 
             className="w-48 h-48 rounded-lg mb-4 mix-blend-multiply"
           />
           <p className="text-sm text-gray-500 mt-2 text-center max-w-xs break-all">
             Scan to visit <br/>
-            <span className="font-mono text-indigo-600 font-bold">{fullShareUrl}</span>
+            <span className="font-mono text-indigo-600 font-bold">{currentLink?.originalUrl}</span>
           </p>
           <button 
              onClick={() => {
                 // Simple download simulation via new window
-                window.open(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(fullShareUrl)}`, '_blank');
+                window.open(`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(currentLink?.originalUrl || '')}`, '_blank');
              }}
              className="mt-4 text-xs font-bold text-indigo-600 hover:underline"
           >
